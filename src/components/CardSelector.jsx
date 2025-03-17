@@ -84,15 +84,16 @@ const CardSelector = () => {
 
     const originalWidth = selectedImage.width;
     const originalHeight = selectedImage.height;
-    const dpi = highRes ? 200 : 72; // High-res: 200 DPI, Normal: 72 DPI
+    const dpi = highRes ? 200 : 72;
     const scale = dpi / 72;
 
     // Use original dimensions for canvas
     canvas.width = originalWidth;
     canvas.height = originalHeight;
 
-    // Adjust preview display size
-    const previewWidth = Math.min(originalWidth, 600);
+    // Dynamically adjust preview size based on container width
+    const containerWidth = canvas.parentElement.clientWidth;
+    const previewWidth = Math.min(originalWidth, containerWidth * 0.9); // 90% of container width
     const previewScale = previewWidth / originalWidth;
     canvas.style.width = `${previewWidth}px`;
     canvas.style.height = `${originalHeight * previewScale}px`;
@@ -101,7 +102,6 @@ const CardSelector = () => {
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(selectedImage, 0, 0, canvas.width, canvas.height);
 
-    // Font size: 25% of smaller dimension, scaled for DPI
     const baseFontSize = Math.min(originalWidth, originalHeight) * 0.25;
     const adjustedFontSize = (fontSize || baseFontSize) * (highRes ? scale : 1);
 
@@ -141,7 +141,7 @@ const CardSelector = () => {
     try {
       drawPreview();
       const canvas = canvasRef.current;
-      const dataUrl = canvas.toDataURL('image/png', highRes ? 1.0 : 0.7); // High-res: 1.0, Normal: 0.7
+      const dataUrl = canvas.toDataURL('image/png', highRes ? 1.0 : 0.7);
 
       if (!dataUrl || dataUrl === 'data:,') {
         throw new Error('Canvas failed to generate image data');
@@ -163,7 +163,14 @@ const CardSelector = () => {
   useEffect(() => {
     if (!selectedImage) return;
     debouncedDrawPreview();
-    return () => debouncedDrawPreview.cancel();
+
+    // Add resize listener for responsiveness
+    const handleResize = () => debouncedDrawPreview();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      debouncedDrawPreview.cancel();
+    };
   }, [
     selectedImage,
     name,
@@ -351,7 +358,7 @@ const CardSelector = () => {
         <div className="w-full lg:w-1/2 p-4 flex flex-col items-center justify-center gap-4">
           <canvas
             ref={canvasRef}
-            className="w-full max-w-[600px] h-auto border border-gray-300 rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.15)] cursor-crosshair"
+            className="w-full h-auto border border-gray-300 rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.15)] cursor-crosshair"
             onClick={handleCanvasClick}
           />
           <button
