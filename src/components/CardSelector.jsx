@@ -75,14 +75,20 @@ const CardSelector = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
-    const fixedWidth = 400;
-    const fixedHeight = 712;
+    // Use original image dimensions
+    const originalWidth = selectedImage.width;
+    const originalHeight = selectedImage.height;
     const dpi = highRes ? 300 : 72;
     const scale = dpi / 72;
-    canvas.width = fixedWidth * scale;
-    canvas.height = fixedHeight * scale;
 
+    // Set canvas to original dimensions scaled by DPI
+    canvas.width = originalWidth * scale;
+    canvas.height = originalHeight * scale;
+
+    // Draw image at original dimensions
     ctx.drawImage(selectedImage, 0, 0, canvas.width, canvas.height);
+
+    // Scale font size and name position
     const adjustedFontSize = fontSize * scale;
     ctx.font = `${fontStyle === 'bold' ? 'bold ' : ''}${
       fontStyle === 'italic' ? 'italic ' : ''
@@ -90,21 +96,29 @@ const CardSelector = () => {
     ctx.fillStyle = color;
     ctx.textAlign = 'center';
     ctx.fillText(
-      name || t('enter_name'), // Placeholder updates with language
+      name || t('enter_name'),
       namePosition.x * scale,
       namePosition.y * scale
     );
   };
 
   const handleCanvasClick = (e) => {
-    if (!selectedImage) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const scaleX = 400 / rect.width;
-    const scaleY = 712 / rect.height;
-    setNamePosition({
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY,
-    });
+    if (!selectedImage || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+
+    // Calculate the click position relative to the original image dimensions
+    const scaleX = selectedImage.width / rect.width; // Ratio of original width to displayed width
+    const scaleY = selectedImage.height / rect.height; // Ratio of original height to displayed height
+
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+
+    // Set position in original image coordinates (not scaled by DPI)
+    setNamePosition({ x, y });
+
+    // Redraw the canvas with the new position
+    drawPreview();
   };
 
   const downloadCard = () => {
@@ -130,8 +144,17 @@ const CardSelector = () => {
     fontStyle,
     highRes,
     fontSize,
-    i18n.language, // Added to trigger redraw on language change
+    i18n.language,
   ]);
+
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.href = imageCategories['RHC'][0]; // Preload first RHC image
+    link.as = 'image';
+    document.head.appendChild(link);
+    return () => document.head.removeChild(link);
+  }, []);
 
   const whatsappCards = imageCategories[activeTab]?.filter(
     (_, index) => index % 2 === 0
@@ -194,6 +217,7 @@ const CardSelector = () => {
                       src={src}
                       alt={`WhatsApp Card ${index + 1}`}
                       className="w-full h-full object-contain rounded-t-lg group-hover:opacity-90 transition-opacity duration-200"
+                      loading="lazy" // Added lazy loading
                     />
                   </div>
                 ))}
@@ -304,8 +328,8 @@ const CardSelector = () => {
         <div className="w-full lg:w-1/2 p-4 flex flex-col items-center justify-center gap-4">
           <canvas
             ref={canvasRef}
-            className="w-full max-w-[400px] h-auto aspect-[400/712] border border-gray-300 rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.15)] cursor-crosshair"
-            onClick={handleCanvasClick}
+            className="w-full max-w-[400px] h-auto border border-gray-300 rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.15)] cursor-crosshair"
+            onClick={handleCanvasClick} // Re-added onClick handler
           />
           <button
             onClick={downloadCard}
