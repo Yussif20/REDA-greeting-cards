@@ -13,6 +13,7 @@ const resources = {
       save_card: 'Save Card',
       select_card_alert: 'Please select a card first!',
       copyright: '© 2025 All rights reserved.', // Added English footer text
+      high_res_error: 'Failed to save high-resolution image. Try normal resolution or a smaller image.',
     },
   },
   ar: {
@@ -25,6 +26,7 @@ const resources = {
       save_card: 'حفظ البطاقة',
       select_card_alert: 'اختار بطاقة أولًا!',
       copyright: '© 2025 جميع الحقوق محفوظة', // Added Arabic footer text
+      high_res_error: 'فشل حفظ الصورة عالية الدقة. جرب الدقة العادية أو صورة أصغر.',
     },
   },
 };
