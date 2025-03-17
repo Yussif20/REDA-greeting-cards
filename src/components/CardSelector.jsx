@@ -15,9 +15,47 @@ const CardSelector = () => {
   const [activeTab, setActiveTab] = useState('RHC');
   const [highRes, setHighRes] = useState(false);
   const [fontSize, setFontSize] = useState(40);
+  const [fontsLoaded, setFontsLoaded] = useState(false);
   const canvasRef = useRef(null);
   const tabRefs = useRef([]);
   const [underlineStyle, setUnderlineStyle] = useState({ left: '0px' });
+
+  useEffect(() => {
+    const loadFonts = async () => {
+      const fontPromises = [
+        'Cairo',
+        'Tajawal',
+        'Amiri',
+        'Noto Naskh Arabic',
+        'Scheherazade',
+        'Lateef',
+        'Arial',
+        'Roboto',
+        'Lora',
+        'Playfair Display',
+      ].map((fontName) => {
+        const font = new FontFace(
+          fontName,
+          `url(https://fonts.googleapis.com/css2?family=${fontName.replace(
+            ' ',
+            '+'
+          )}:wght@400;700&display=swap)`
+        );
+        return font
+          .load()
+          .then(() => document.fonts.add(font))
+          .catch((err) =>
+            console.warn(`Font ${fontName} failed to load:`, err)
+          );
+      });
+
+      await Promise.all(fontPromises);
+      setFontsLoaded(true);
+      debouncedDrawPreview();
+    };
+
+    loadFonts();
+  }, []);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -78,7 +116,7 @@ const CardSelector = () => {
   };
 
   const drawPreview = () => {
-    if (!selectedImage || !canvasRef.current) return;
+    if (!selectedImage || !canvasRef.current || !fontsLoaded) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
@@ -87,13 +125,11 @@ const CardSelector = () => {
     const dpi = highRes ? 200 : 72;
     const scale = dpi / 72;
 
-    // Use original dimensions for canvas
     canvas.width = originalWidth;
     canvas.height = originalHeight;
 
-    // Dynamically adjust preview size based on container width
     const containerWidth = canvas.parentElement.clientWidth;
-    const previewWidth = Math.min(originalWidth, containerWidth * 0.9); // 90% of container width
+    const previewWidth = Math.min(originalWidth, containerWidth * 0.9);
     const previewScale = previewWidth / originalWidth;
     canvas.style.width = `${previewWidth}px`;
     canvas.style.height = `${originalHeight * previewScale}px`;
@@ -105,9 +141,11 @@ const CardSelector = () => {
     const baseFontSize = Math.min(originalWidth, originalHeight) * 0.25;
     const adjustedFontSize = (fontSize || baseFontSize) * (highRes ? scale : 1);
 
-    ctx.font = `${fontStyle === 'bold' ? 'bold ' : ''}${
+    const fontString = `${fontStyle === 'bold' ? 'bold ' : ''}${
       fontStyle === 'italic' ? 'italic ' : ''
     }${adjustedFontSize}px "${font}"`;
+    ctx.font = fontString;
+    console.log('Applied font:', fontString);
     ctx.fillStyle = color;
     ctx.textAlign = 'center';
     ctx.fillText(name || t('enter_name'), namePosition.x, namePosition.y);
@@ -160,11 +198,62 @@ const CardSelector = () => {
     }
   };
 
+  const shareCard = async () => {
+    if (!selectedImage) {
+      alert(t('select_card_alert'));
+      return;
+    }
+
+    try {
+      drawPreview();
+      const canvas = canvasRef.current;
+      const dataUrl = canvas.toDataURL('image/png', highRes ? 1.0 : 0.7);
+
+      if (!dataUrl || dataUrl === 'data:,') {
+        throw new Error('Canvas failed to generate image data');
+      }
+
+      // Convert data URL to Blob
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      const file = new File(
+        [blob],
+        `card_${highRes ? 'high_res' : 'normal'}.png`,
+        { type: 'image/png' }
+      );
+
+      // Use Web Share API if available
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({ files: [file] })
+      ) {
+        await navigator.share({
+          files: [file],
+          title: t('share_title'),
+          text: t('share_text'),
+        });
+      } else {
+        // Fallback: Prompt user to download and share manually
+        const link = document.createElement('a');
+        link.download = file.name;
+        link.href = dataUrl;
+        link.click();
+        alert(t('share_fallback'));
+      }
+    } catch (error) {
+      console.error('Error sharing image:', error);
+      alert(
+        t('share_error') ||
+          'Failed to share image. Please download and share manually.'
+      );
+    }
+  };
+
   useEffect(() => {
-    if (!selectedImage) return;
+    if (!selectedImage || !fontsLoaded) return;
     debouncedDrawPreview();
 
-    // Add resize listener for responsiveness
     const handleResize = () => debouncedDrawPreview();
     window.addEventListener('resize', handleResize);
     return () => {
@@ -181,6 +270,7 @@ const CardSelector = () => {
     highRes,
     fontSize,
     i18n.language,
+    fontsLoaded,
   ]);
 
   const whatsappCards = imageCategories[activeTab]?.filter(
@@ -228,7 +318,6 @@ const CardSelector = () => {
 
           {/* Cards Section */}
           <div className="w-full flex flex-col gap-6 py-6">
-            {/* WhatsApp Story Section */}
             <div>
               <h2 className="text-lg font-semibold text-[#243e87] mb-4">
                 {i18n.language === 'ar' ? 'قصة واتساب' : 'WhatsApp Story'}
@@ -251,7 +340,6 @@ const CardSelector = () => {
               </div>
             </div>
 
-            {/* LinkedIn Post Section */}
             <div>
               <h2 className="text-lg font-semibold text-[#243e87] mb-4">
                 {i18n.language === 'ar' ? 'منشور لينكدإن' : 'LinkedIn Post'}
@@ -276,28 +364,31 @@ const CardSelector = () => {
           </div>
 
           {/* Options */}
-          <div className="w-full max-w-md flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={t('enter_name')}
-                className="p-2 w-full bg-white border border-gray-300 rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.1)] focus:outline-none focus:ring-2 focus:ring-[#243e87] focus:border-transparent transition-all duration-200"
-              />
-              <span className="text-xs text-gray-500 mt-1 sm:mt-0">
-                {i18n.language === 'ar'
-                  ? 'اضغط أو المس الصورة لتحديد مكان الاسم'
-                  : 'Click or touch the image to set name position'}
+          <div className="w-full max-w-md flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm text-[#243e87] font-medium">
+                {t('guide_name')}
               </span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={t('enter_name')}
+                  className="p-2 w-full bg-white border border-gray-300 rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.1)] focus:outline-none focus:ring-2 focus:ring-[#243e87] focus:border-transparent transition-all duration-200"
+                />
+                <span className="text-xs text-gray-500 mt-1 sm:mt-0">
+                  {i18n.language === 'ar'
+                    ? 'اضغط أو المس الصورة لتحديد مكان الاسم'
+                    : 'Click or touch the image to set name position'}
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col sm:flex-row items-center gap-2">
-              <label
-                htmlFor="colorPicker"
-                className="text-[#243e87] font-medium"
-              >
-                {t('choose_color')}
-              </label>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-sm text-[#243e87] font-medium">
+                {t('guide_color')}
+              </span>
               <input
                 type="color"
                 id="colorPicker"
@@ -305,30 +396,59 @@ const CardSelector = () => {
                 onChange={(e) => setColor(e.target.value)}
                 className="w-8 h-8 bg-transparent border-none cursor-pointer"
               />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-sm text-[#243e87] font-medium">
+                {t('guide_font')}
+              </span>
               <select
                 value={font}
                 onChange={(e) => setFont(e.target.value)}
-                className="p-1 w-full sm:w-24 bg-white border border-gray-300 rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.1)] focus:outline-none focus:ring-2 focus:ring-[#243e87]"
+                className="p-1 w-full sm:w-32 bg-white border border-gray-300 rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.1)] focus:outline-none focus:ring-2 focus:ring-[#243e87]"
               >
                 <option value="Cairo">Cairo</option>
                 <option value="Tajawal">Tajawal</option>
                 <option value="Amiri">Amiri</option>
+                <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
+                <option value="Scheherazade">Scheherazade</option>
+                <option value="Lateef">Lateef</option>
                 <option value="Arial">Arial</option>
+                <option value="Roboto">Roboto</option>
+                <option value="Lora">Lora</option>
+                <option value="Playfair Display">Playfair Display</option>
               </select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-sm text-[#243e87] font-medium">
+                {t('guide_font_style')}
+              </span>
               <select
                 value={fontStyle}
                 onChange={(e) => setFontStyle(e.target.value)}
-                className="p-1 w-full sm:w-24 bg-white border border-gray-300 rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.1)] focus:outline-none focus:ring-2 focus:ring-[#243e87]"
+                className="p-1 w-full sm:w-32 bg-white border border-gray-300 rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.1)] focus:outline-none focus:ring-2 focus:ring-[#243e87]"
               >
-                <option value="normal">Normal</option>
-                <option value="bold">Bold</option>
-                <option value="italic">Italic</option>
+                <option value="normal">{t('normal')}</option>
+                <option value="bold">{t('bold')}</option>
+                <option value="italic">{t('italic')}</option>
               </select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-sm text-[#243e87] font-medium">
+                {t('guide_font_size')}
+              </span>
               <select
                 value={fontSize}
                 onChange={(e) => setFontSize(Number(e.target.value))}
-                className="p-1 w-full sm:w-24 bg-white border border-gray-300 rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.1)] focus:outline-none focus:ring-2 focus:ring-[#243e87]"
+                className="p-1 w-full sm:w-32 bg-white border border-gray-300 rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.1)] focus:outline-none focus:ring-2 focus:ring-[#243e87]"
               >
+                <option value="20">20px</option>
+                <option value="24">24px</option>
+                <option value="28">28px</option>
+                <option value="32">32px</option>
+                <option value="36">36px</option>
                 <option value="40">40px</option>
                 <option value="60">60px</option>
                 <option value="80">80px</option>
@@ -340,17 +460,23 @@ const CardSelector = () => {
                 <option value="300">300px</option>
               </select>
             </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="highRes"
-                checked={highRes}
-                onChange={(e) => setHighRes(e.target.checked)}
-                className="w-4 h-4 accent-[#ee2e3a]"
-              />
-              <label htmlFor="highRes" className="text-[#243e87] font-medium">
-                {t('save_high_quality')}
-              </label>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-sm text-[#243e87] font-medium">
+                {t('guide_high_res')}
+              </span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="highRes"
+                  checked={highRes}
+                  onChange={(e) => setHighRes(e.target.checked)}
+                  className="w-4 h-4 accent-[#ee2e3a]"
+                />
+                <label htmlFor="highRes" className="text-[#243e87] font-medium">
+                  {t('save_high_quality')}
+                </label>
+              </div>
             </div>
           </div>
         </div>
@@ -358,15 +484,23 @@ const CardSelector = () => {
         <div className="w-full lg:w-1/2 p-4 flex flex-col items-center justify-center gap-4">
           <canvas
             ref={canvasRef}
-            className="w-full h-auto border border-gray-300 rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.15)] cursor-crosshair"
+            className="w-full h-auto border border-gray-300 rounded-lg shadow-[0_4px_8+Dx_rgba(0,0,0,0.15)] cursor-crosshair"
             onClick={handleCanvasClick}
           />
-          <button
-            onClick={downloadCard}
-            className="cursor-pointer px-6 py-2 bg-[#ee2e3a] text-white font-semibold rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.15)] hover:bg-[#ee2e3a]/80 hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 bounce-slow"
-          >
-            {t('save_card')}
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={downloadCard}
+              className="cursor-pointer px-6 py-2 bg-[#ee2e3a] text-white font-semibold rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.15)] hover:bg-[#ee2e3a]/80 hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 bounce-slow"
+            >
+              {t('save_card')}
+            </button>
+            <button
+              onClick={shareCard}
+              className="cursor-pointer px-6 py-2 bg-[#25D366] text-white font-semibold rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.15)] hover:bg-[#25D366]/80 hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 bounce-slow"
+            >
+              {t('share_card')}
+            </button>
+          </div>
         </div>
       </div>
     </div>

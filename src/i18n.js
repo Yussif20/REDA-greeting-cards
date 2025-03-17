@@ -14,6 +14,20 @@ const resources = {
       select_card_alert: 'Please select a card first!',
       copyright: '© 2025 All rights reserved.', // Added English footer text
       high_res_error: 'Failed to save high-resolution image. Try normal resolution or a smaller image.',
+      "guide_name": "Enter your name here",
+      "guide_color": "Pick a text color",
+      "guide_font": "Choose a font style",
+      "guide_font_style": "Select text style",
+      "guide_font_size": "Set text size",
+      "guide_high_res": "Save in high quality",
+      "normal": "Normal",
+      "bold": "Bold",
+      "italic": "Italic",
+      "share_card": "Share",
+      "share_title": "My Custom Card",
+      "share_text": "Check out this card I created!",
+      "share_fallback": "Sharing not supported. Image downloaded—please share it manually.",
+      "share_error": "Failed to share image. Please download and share manually."
     },
   },
   ar: {
@@ -27,6 +41,20 @@ const resources = {
       select_card_alert: 'اختار بطاقة أولًا!',
       copyright: '© 2025 جميع الحقوق محفوظة', // Added Arabic footer text
       high_res_error: 'فشل حفظ الصورة عالية الدقة. جرب الدقة العادية أو صورة أصغر.',
+      "guide_name": "أدخل اسمك هنا",
+      "guide_color": "اختر لون النص",
+      "guide_font": "اختر نمط الخط",
+      "guide_font_style": "حدد أسلوب النص",
+      "guide_font_size": "حدد حجم النص",
+      "guide_high_res": "حفظ بجودة عالية",
+      "normal": "عادي",
+      "bold": "غامق",
+      "italic": "مائل",
+      "share_card": "مشاركة",
+      "share_title": "بطاقتي المخصصة",
+      "share_text": "شاهد هذه البطاقة التي أنشأتها!",
+      "share_fallback": "المشاركة غير مدعومة. تم تنزيل الصورة—يرجى مشاركتها يدويًا.",
+      "share_error": "فشل في مشاركة الصورة. يرجى تنزيلها ومشاركتها يدويًا."
     },
   },
 };
