@@ -1,19 +1,50 @@
+// src/components/Header.jsx
 import logo from '../assets/logo.svg';
+import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 
 const Header = () => {
+  const { t, i18n } = useTranslation();
+  const [language, setLanguage] = useState('en'); // Default to English
+
+  const toggleLanguage = () => {
+    const newLang = language === 'ar' ? 'en' : 'ar';
+    setLanguage(newLang);
+    i18n.changeLanguage(newLang); // Switch language in i18next
+  };
+
   return (
-    <header className="bg-gray-200 w-full border-b border-gray-300 shadow-lg px-4 sm:px-10 lg:px-20 py-6 sm:py-10">
-      {/* Container */}
-      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-10 sm:gap-4">
+    <header
+      className="bg-gray-200 w-full border-b border-gray-300 shadow-lg px-4 sm:px-10 lg:px-20 py-6 sm:py-10"
+      dir={language === 'ar' ? 'rtl' : 'ltr'} // Dynamic text direction
+    >
+      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
         {/* Logo */}
-        <div className="flex items-center justify-center">
+        <div>
           <img
             className="h-8 sm:h-10 w-auto max-w-[200px] sm:max-w-[250px]"
             src={logo}
             alt="logo"
           />
         </div>
-        {/* Button with SVG */}
+
+        {/* Language Toggle Switch */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-700">AR</span>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={language === 'en'}
+              onChange={toggleLanguage}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-[#ee2e3a] transition-colors duration-300"></div>
+            <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 peer-checked:translate-x-5"></div>
+          </label>
+          <span className="text-sm font-medium text-gray-700">EN</span>
+        </div>
+
+        {/* Visit Website Button */}
         <a
           href="https://www.redahazardcontrol.com/"
           target="_blank"
@@ -34,7 +65,7 @@ const Header = () => {
             />
           </svg>
           <span className="text-xs sm:text-sm md:text-base">
-            زوروا موقعنا الإلكتروني
+            {t('visit_website')}
           </span>
         </a>
       </div>
