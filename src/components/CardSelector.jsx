@@ -1,14 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { imageCategories } from '../data';
 
-// const bg = 'bg-gradient-to-b from-[#e0e7e9] to-[#ffca19]/20';
-
 const CardSelector = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [name, setName] = useState('');
   const [color, setColor] = useState('#ffffff');
-  const [namePosition, setNamePosition] = useState({ x: 200, y: 356 }); // بناءً على الأبعاد الجديدة
-  const [font, setFont] = useState('Cairo'); // الخط الافتراضي عربي
+  const [namePosition, setNamePosition] = useState({ x: 200, y: 356 });
+  const [font, setFont] = useState('Cairo');
   const [fontStyle, setFontStyle] = useState('normal');
   const [activeTab, setActiveTab] = useState('FHC');
   const [highRes, setHighRes] = useState(false);
@@ -63,7 +61,6 @@ const CardSelector = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
-    // أبعاد ثابتة للـ Canvas (400x712 بناءً على نسبة 1080x1920 مقسمة)
     const fixedWidth = 400;
     const fixedHeight = 712;
     const dpi = highRes ? 300 : 72;
@@ -71,7 +68,6 @@ const CardSelector = () => {
     canvas.width = fixedWidth * scale;
     canvas.height = fixedHeight * scale;
 
-    // رسم الصورة بحجم ثابت بدون قص
     ctx.drawImage(selectedImage, 0, 0, canvas.width, canvas.height);
     const adjustedFontSize = fontSize * scale;
     ctx.font = `${fontStyle === 'bold' ? 'bold ' : ''}${
@@ -89,7 +85,7 @@ const CardSelector = () => {
   const handleCanvasClick = (e) => {
     if (!selectedImage) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const scaleX = 400 / rect.width; // الأبعاد الثابتة
+    const scaleX = 400 / rect.width;
     const scaleY = 712 / rect.height;
     setNamePosition({
       x: (e.clientX - rect.left) * scaleX,
@@ -124,19 +120,19 @@ const CardSelector = () => {
 
   return (
     <div
-      className="min-h-screen bg-gray-200 flex flex-col items-center py-8 overflow-hidden"
+      className="min-h-screen bg-gray-200 flex flex-col items-center py-4 sm:py-8 overflow-hidden"
       dir="rtl"
     >
-      <h1 className="text-2xl font-bold text-[#243e87] mb-4 fade-in">
+      <h1 className="text-xl sm:text-2xl font-bold text-[#243e87] mb-4 fade-in">
         اختر بطاقة واكتب اسمك
       </h1>
 
-      {/* الشاشة الكبيرة: تصميم مقسم */}
-      <div className="flex flex-1 w-full h-[calc(100%-60px)]">
-        {/* اليسار: الـ Tabs، البطاقات، والخيارات */}
-        <div className="w-1/2 p-4 overflow-y-auto flex flex-col gap-4">
-          {/* الـ Tabs */}
-          <div className="mx-auto py-1 px-1 flex items-center justify-between mb-8 bg-[#F6F8FA] text-black text-sm font-medium leading-5 rounded-lg relative overflow-x-auto">
+      {/* Responsive Container */}
+      <div className="flex flex-col lg:flex-row flex-1 w-full max-w-6xl px-4 sm:px-6 lg:px-0">
+        {/* Left Section: Tabs, Cards, and Options */}
+        <div className="w-full lg:w-1/2 p-4 overflow-y-auto flex flex-col items-center gap-4">
+          {/* Tabs */}
+          <div className="w-full max-w-md mx-auto py-1 px-1 flex items-center justify-between mb-6 bg-[#F6F8FA] text-black text-sm font-medium leading-5 rounded-lg relative overflow-x-auto">
             {Object.keys(imageCategories).map((category, index) => (
               <button
                 key={category}
@@ -160,12 +156,12 @@ const CardSelector = () => {
             />
           </div>
 
-          {/* البطاقات */}
-          <div className="w-full grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-x-8 gap-y-8 place-items-center">
+          {/* Cards */}
+          <div className="w-full flex flex-wrap justify-center gap-4 sm:gap-8 py-6">
             {imageCategories[activeTab].map((src, index) => (
               <div
                 key={index}
-                className="group bg-white rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_8px_rgba(0,0,0,0.15)] transition-all duration-300 cursor-pointer w-48 h-80" // حجم ثابت للكارت
+                className="group bg-white rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_8px_rgba(0,0,0,0.15)] transition-all duration-300 cursor-pointer w-40 h-64 sm:w-48 sm:h-80"
                 onClick={() => selectCard(src)}
               >
                 <img
@@ -177,8 +173,8 @@ const CardSelector = () => {
             ))}
           </div>
 
-          {/* الخيارات */}
-          <div className="flex flex-col gap-3">
+          {/* Options */}
+          <div className="w-full max-w-md flex flex-col gap-3">
             <input
               type="text"
               value={name}
@@ -248,16 +244,16 @@ const CardSelector = () => {
           </div>
         </div>
 
-        {/* اليمين: الصورة الناتجة والزر */}
-        <div className="w-1/2 p-4 flex flex-col items-center justify-center gap-4">
+        {/* Right Section: Canvas and Button */}
+        <div className="w-full lg:w-1/2 p-4 flex flex-col items-center justify-center gap-4">
           <canvas
             ref={canvasRef}
-            className="w-[400px] h-[712px] border border-gray-300 rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.15)] cursor-crosshair" // حجم ثابت
+            className="w-full max-w-[400px] h-auto aspect-[400/712] border border-gray-300 rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.15)] cursor-crosshair"
             onClick={handleCanvasClick}
           />
           <button
             onClick={downloadCard}
-            className="px-6 py-2 bg-[#ee2e3a] text-white font-semibold rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.15)] hover:bg-[#ee2e3a]/80 hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 bounce-slow"
+            className="cursor-pointer px-6 py-2 bg-[#ee2e3a] text-white font-semibold rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.15)] hover:bg-[#ee2e3a]/80 hover:shadow-[0_1px_3px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 bounce-slow"
           >
             حفظ البطاقة
           </button>
