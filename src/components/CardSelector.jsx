@@ -272,7 +272,7 @@ const CardSelector = () => {
       dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
     >
       <h1 className="text-xl sm:text-2xl font-bold text-[#243e87] mb-4 fade-in">
-        (1){t('select_card')}
+        (1) {t('select_card')}
       </h1>
 
       <div className="flex flex-col lg:flex-row flex-1 w-full max-w-6xl px-4 sm:px-6 lg:px-0">
@@ -353,7 +353,7 @@ const CardSelector = () => {
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-[#243e87] font-medium">
-                  (2){t('guide_name')}
+                  (2) {t('guide_name')}
                 </span>
               </div>
               <input
