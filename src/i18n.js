@@ -6,7 +6,7 @@ const resources = {
   en: {
     translation: {
       visit_website: 'Visit Our Website',
-      select_card: 'Select a Card and Write Your Name',
+      select_card: 'Select a Card by Clicking',
       enter_name: 'Enter your name here',
       choose_color: 'Choose Name Color:',
       save_high_quality: 'Save in High Quality (300 DPI)',
@@ -33,7 +33,7 @@ const resources = {
   ar: {
     translation: {
       visit_website: 'زوروا موقعنا الإلكتروني',
-      select_card: 'اختر بطاقة واكتب اسمك',
+      select_card: 'اختر احدى الصور بالضغط عليها',
       enter_name: 'اكتب اسمك هنا',
       choose_color: 'اختر لون الاسم:',
       save_high_quality: 'حفظ بجودة عالية (300 DPI)',

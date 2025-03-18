@@ -272,7 +272,7 @@ const CardSelector = () => {
       dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
     >
       <h1 className="text-xl sm:text-2xl font-bold text-[#243e87] mb-4 fade-in">
-        {t('select_card')}
+        (1){t('select_card')}
       </h1>
 
       <div className="flex flex-col lg:flex-row flex-1 w-full max-w-6xl px-4 sm:px-6 lg:px-0">
@@ -301,7 +301,6 @@ const CardSelector = () => {
               }}
             />
           </div>
-
           {/* Cards Section */}
           <div className="w-full flex flex-col gap-6 py-6">
             <div>
@@ -354,12 +353,7 @@ const CardSelector = () => {
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-[#243e87] font-medium">
-                  {t('guide_name')}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {i18n.language === 'ar'
-                    ? `(لتحديد مكان وضع الاسم على الصورة اضغط أو المس الصورة واختر المكان المناسب)`
-                    : '(Click or touch the image to set name position)'}
+                  (2){t('guide_name')}
                 </span>
               </div>
               <input
@@ -450,6 +444,11 @@ const CardSelector = () => {
         </div>
 
         <div className="w-full lg:w-1/2 p-4 flex flex-col items-center justify-center gap-4">
+          <span className="text-sm text-gray-500">
+            {i18n.language === 'ar'
+              ? `(لتحديد مكان وضع الاسم على الصورة اضغط أو المس الصورة واختر المكان المناسب)`
+              : '(Click or touch the image to set name position)'}
+          </span>
           <canvas
             ref={canvasRef}
             className="w-full h-auto border border-gray-300 rounded-lg shadow-[0_4px_8px_rgba(0,0,0,0.15)] cursor-crosshair"
