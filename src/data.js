@@ -6,9 +6,11 @@
     Process: ['/PROCESS/process1.jpg', '/PROCESS/process2.jpg'],
     Safe: [
       '/SAFE/safe1.jpg',
-      '/SAFE/safe3.jpg',
-      '/SAFE/safe2.jpg',
       '/SAFE/safe4.jpg',
+      '/SAFE/safe3.jpg',
+      '/SAFE/safe6.jpg',
+      '/SAFE/safe2.jpg',
+      '/SAFE/safe5.jpg',
     ],
     Verdifor: [
       '/VERDIFOR/Verdifor3.jpg',
